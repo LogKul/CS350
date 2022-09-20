@@ -11,14 +11,18 @@ from rest_framework.decorators import api_view
 
 @api_view(['GET', 'POST', 'DELETE'])
 def author(request):
+
+    # Example: [http://localhost:8000/authors], no body
+    # Example: [http://localhost:8000/authors?name=Harry Jenkins], no body
     if request.method == 'GET':
         authors = Author.objects.all()
-        name = request.GET.get('name', None)
-        if name is not None:
-            author = authors.filter(name_icontains=name)
+        author_name = request.GET.get('name', None)
+        if author_name is not None:
+            authors = authors.filter(name=author_name)
         authors_serializer = AuthorSerializer(authors, many=True)
         return JsonResponse(authors_serializer.data, safe=False)
 
+    # Example: [http://localhost:8000/authors], body has JSON author data
     elif request.method == 'POST':
         author_data = JSONParser().parse(request)
         author_serializer = AuthorSerializer(data=author_data)
@@ -27,21 +31,31 @@ def author(request):
             return JsonResponse(author_serializer.data, status=status.HTTP_201_CREATED)
         return JsonResponse(author_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    # Example: [http://localhost:8000/authors], no body, KILLS EVERYTHING
+    # Example: [http://localhost:8000/authors?name=Harry Jenkins], no body
     elif request.method == 'DELETE':
-        count = Author.objects.all().delete()
+        authors = Author.objects.all()
+        author_name = request.GET.get('name', None)
+        if author_name is not None:
+            authors = authors.filter(name=author_name)
+        count = authors.delete()
         return JsonResponse({'message': '{} Authors were deleted successfully!'.format(count[0])}, status=status.HTTP_204_NO_CONTENT)
 
 
 @api_view(['GET', 'POST', 'DELETE'])
 def book(request):
+
+    # Example: [http://localhost:8000/books], no body
+    # Example: [http://localhost:8000/books?name=Harry Jenkin's Book about Agriculture], no body
     if request.method == 'GET':
         books = Book.objects.all()
-        name = request.GET.get('name', None)
-        if name is not None:
-            book = books.filter(name_icontains=name)
+        book_name = request.GET.get('name', None)
+        if book_name is not None:
+            books = books.filter(name=book_name)
         books_serializer = BookSerializer(books, many=True)
         return JsonResponse(books_serializer.data, safe=False)
 
+    # Example: [http://localhost:8000/books], body has JSON book data
     elif request.method == 'POST':
         book_data = JSONParser().parse(request)
         book_serializer = BookSerializer(data=book_data)
@@ -50,8 +64,14 @@ def book(request):
             return JsonResponse(book_serializer.data, status=status.HTTP_201_CREATED)
         return JsonResponse(book_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    # Example: [http://localhost:8000/books], no body, KILLS EVERYTHING
+    # Example: [http://localhost:8000/books?name=Harry Jenkin's Book about Agriculture], no body
     elif request.method == 'DELETE':
-        count = Book.objects.all().delete()
+        books = Book.objects.all()
+        book_name = request.GET.get('name', None)
+        if book_name is not None:
+            books = books.filter(name=book_name)
+        count = books.delete()
         return JsonResponse({'message': '{} Books were deleted successfully!'.format(count[0])}, status=status.HTTP_204_NO_CONTENT)
 
 
@@ -72,6 +92,7 @@ def author_books(request):
             return JsonResponse({'message': 'Missing author_id field.'}, status=status.HTTP_204_NO_CONTENT)
         # 'safe=False' for objects serialization
 
+    # Example: [http://localhost:8000/authorbooks?author_id=3], no body
     elif request.method == 'DELETE':
         books = Book.objects.all()
 
@@ -87,16 +108,17 @@ def author_books(request):
 @api_view(['GET', 'PUT', 'DELETE'])
 def single_author(request, pk):
 
-    # Example: [http://localhost:8000/authorbooks/3], no body
     try:
         author = Author.objects.get(pk=pk)
     except Author.DoesNotExist:
         return JsonResponse({'message': 'The author does not exist'}, status=status.HTTP_404_NOT_FOUND)
 
+    # Example: [http://localhost:8000/authorbooks/3], no body
     if request.method == 'GET':
         authors_serializer = AuthorSerializer(author)
         return JsonResponse(authors_serializer.data)
 
+    # Example: [http://localhost:8000/authorbooks/3], no body
     elif request.method == 'DELETE':
         author.delete()
         return JsonResponse({'message': 'Author was deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
